@@ -59,7 +59,7 @@ export default function FaqPage() {
         <div className="flex justify-center lg:justify-end">
           <div className="relative aspect-[3/4] w-full max-w-[280px] overflow-hidden rounded-3xl border border-line bg-paper-2 shadow-xl">
             <Image
-              src="/img/huaipesito-taller.png"
+              src="/img/huaipesito-taller.webp"
               alt="Huaipesito, la mascota de Norte Sur"
               fill
               sizes="280px"

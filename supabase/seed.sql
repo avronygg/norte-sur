@@ -60,4 +60,4 @@ update products set sale_mode = 'direct', price = 5990, stock = 60  where slug =
 update products set sale_mode = 'direct', price = 3490, stock = 150 where slug = 'jersey-blanco';
 
 -- Por ahora, todos los productos usan la misma foto de ejemplo.
-update products set images = array['/img/huaipe-blanco.png'] where id is not null;
+update products set images = array['/img/huaipe-blanco.webp'] where id is not null;

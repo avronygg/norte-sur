@@ -40,6 +40,8 @@ export function ProductCard({ product }: { product: ProductWithCategory }) {
           <img
             src={product.images[0]}
             alt={product.name}
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
