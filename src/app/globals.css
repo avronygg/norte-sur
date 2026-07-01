@@ -1,26 +1,198 @@
 @import "tailwindcss";
 
+/* ------------------------------------------------------------------ */
+/*  Norte Sur · Sistema de diseño                                      */
+/*  Paleta industrial-textil: papel cálido, tinta profunda, azul       */
+/*  "norte" y cobre "felpa" como acento de venta.                      */
+/* ------------------------------------------------------------------ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Neutrales cálidos (evocan tela / algodón) */
+  --paper: #f6f3ee;
+  --paper-2: #efeae1;
+  --surface: #ffffff;
+  --ink: #17130f;
+  --ink-soft: #514a42;
+  --line: #e3ddd2;
+
+  /* Marca (colores oficiales Norte Sur) */
+  --primary: #004b95; /* azul principal */
+  --primary-600: #003a72; /* hover / sombra */
+  --primary-foreground: #f4f8fc;
+  --accent: #5bb184; /* verde de marca (levemente más profundo para que el blanco resalte) */
+  --accent-600: #46996d; /* hover */
+  --accent-foreground: #ffffff; /* texto blanco sobre verde */
+
+  /* Estados */
+  --success: #2f7d4f;
+  --danger: #b23b3b;
+  --warning: #c08a2f;
+
+  --radius: 0.85rem;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-line: var(--line);
+
+  --color-primary: var(--primary);
+  --color-primary-600: var(--primary-600);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-600: var(--accent-600);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+
+  --radius-base: var(--radius);
+
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+
+  /* ---- Escala tipográfica +20% (títulos, párrafos, botones, tags) ---- */
+  --text-xs: 0.9rem;
+  --text-xs--line-height: 1.4;
+  --text-sm: 1.05rem;
+  --text-sm--line-height: 1.45;
+  --text-base: 1.2rem;
+  --text-base--line-height: 1.6;
+  --text-lg: 1.35rem;
+  --text-lg--line-height: 1.6;
+  --text-xl: 1.5rem;
+  --text-xl--line-height: 1.5;
+  --text-2xl: 1.8rem;
+  --text-2xl--line-height: 1.35;
+  --text-3xl: 2.25rem;
+  --text-3xl--line-height: 1.25;
+  --text-4xl: 2.7rem;
+  --text-4xl--line-height: 1.15;
+  --text-5xl: 3.6rem;
+  --text-5xl--line-height: 1.07;
+  --text-6xl: 4.5rem;
+  --text-6xl--line-height: 1.05;
+  --text-7xl: 5.4rem;
+  --text-7xl--line-height: 1.02;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--line);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Texturas de tela para el hero (huaipes / paños / felpa)            */
+/* ------------------------------------------------------------------ */
+
+/* Trama tipo tejido sutil */
+.texture-weave {
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.06) 0px,
+      rgba(255, 255, 255, 0.06) 1px,
+      transparent 1px,
+      transparent 5px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(0, 0, 0, 0.05) 0px,
+      rgba(0, 0, 0, 0.05) 1px,
+      transparent 1px,
+      transparent 5px
+    );
+}
+
+/* Felpa: ruido suave + degradado afelpado */
+.texture-felpa {
+  background-image:
+    radial-gradient(
+      120% 120% at 50% 0%,
+      rgba(110, 188, 142, 0.16) 0%,
+      transparent 55%
+    ),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+}
+
+/* Grano fino reutilizable */
+.grain {
+  position: relative;
+}
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+@keyframes floaty {
+  0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+  50% { transform: translateY(-10px) rotate(var(--r, 0deg)); }
+}
+.animate-floaty {
+  animation: floaty 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-floaty {
+    animation: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Tipografía para páginas legales (.legal-prose)                     */
+/* ------------------------------------------------------------------ */
+.legal-prose h2 {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.01em;
+}
+.legal-prose h3 {
+  font-weight: 600;
+  color: var(--ink);
+  margin-top: 1.25rem;
+  margin-bottom: 0.35rem;
+}
+.legal-prose p,
+.legal-prose li {
+  color: var(--ink-soft);
+  line-height: 1.7;
+}
+.legal-prose p {
+  margin-bottom: 0.85rem;
+}
+.legal-prose ul {
+  list-style: disc;
+  padding-left: 1.35rem;
+  margin-bottom: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.legal-prose strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.legal-prose a {
+  color: var(--accent-600);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
