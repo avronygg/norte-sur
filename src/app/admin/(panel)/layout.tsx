@@ -4,6 +4,8 @@ import { requireAdmin } from "@/lib/auth";
 import { Logo } from "@/components/ui/logo";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { SignOutButton } from "@/components/admin/sign-out-button";
+import { ToastProvider } from "@/components/admin/toast";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Administración" };
 
@@ -13,8 +15,14 @@ export default async function PanelLayout({
   children: React.ReactNode;
 }) {
   const { profile } = await requireAdmin();
+  const supabase = await createClient();
+  const { count: newQuotes } = await supabase
+    .from("quotes")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "nueva");
 
   return (
+    <ToastProvider>
     <div className="min-h-screen bg-paper-2 lg:flex">
       {/* Sidebar (escritorio) */}
       <aside className="hidden w-64 shrink-0 flex-col border-r border-line bg-surface p-4 lg:flex">
@@ -24,7 +32,7 @@ export default async function PanelLayout({
         <p className="mb-1 px-3.5 text-[0.84rem] font-semibold uppercase tracking-wider text-ink-soft/60">
           Menú
         </p>
-        <AdminNav />
+        <AdminNav newQuotes={newQuotes ?? 0} />
         <div className="mt-auto space-y-1 border-t border-line pt-3">
           <div className="flex items-center gap-2.5 px-2 pb-1">
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
@@ -56,12 +64,13 @@ export default async function PanelLayout({
           <SignOutButton className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-ink-soft hover:text-danger" />
         </div>
         <div className="border-t border-line px-2 py-2">
-          <AdminNav orientation="horizontal" />
+          <AdminNav orientation="horizontal" newQuotes={newQuotes ?? 0} />
         </div>
       </header>
 
       {/* Contenido */}
       <main className="min-w-0 flex-1 p-5 sm:p-8">{children}</main>
     </div>
+    </ToastProvider>
   );
 }

@@ -114,13 +114,14 @@ export default async function AdminDashboard() {
           {(Object.keys(issueCounts) as ProductIssue[])
             .filter((k) => issueCounts[k] > 0)
             .map((k) => (
-              <span
+              <Link
                 key={k}
-                className="inline-flex items-center gap-1.5 rounded-full border border-line bg-paper px-3 py-1.5 text-xs font-medium text-ink-soft"
+                href={`/admin/productos?filtro=${encodeURIComponent(k)}`}
+                className="inline-flex items-center gap-1.5 rounded-full border border-line bg-paper px-3 py-1.5 text-xs font-medium text-ink-soft transition-colors hover:border-accent hover:text-accent"
               >
                 <Warning className="h-3.5 w-3.5 text-warning" />
                 {ISSUE_LABEL[k]}: <strong className="text-ink">{issueCounts[k]}</strong>
-              </span>
+              </Link>
             ))}
         </div>
 

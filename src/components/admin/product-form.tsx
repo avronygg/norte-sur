@@ -11,18 +11,26 @@ import {
   ShoppingCart,
   FileText,
   Check,
+  Star,
+  Lock,
+  ChevronLeft,
+  ChevronRight,
 } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea, Select, Field, Card, Toggle } from "@/components/admin/ui";
-import { cn, formatCLP } from "@/lib/utils";
+import { useToast } from "@/components/admin/toast";
+import { cn, formatCLP, slugify } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import type { Category, Product } from "@/types/database";
 import {
   saveProduct,
   deleteProduct,
+  duplicateProduct,
   createImageUploadUrl,
   type ActionResult,
 } from "@/app/admin/(panel)/productos/actions";
+
+const SHORT_DESC_IDEAL = 90;
 
 const UNITS = ["kg", "unidad", "bolsa", "rollo", "caja"];
 
@@ -34,10 +42,15 @@ export function ProductForm({
   product?: Product;
 }) {
   const router = useRouter();
+  const toast = useToast();
   const isEdit = Boolean(product);
 
   const [name, setName] = useState(product?.name ?? "");
   const [slug, setSlug] = useState(product?.slug ?? "");
+  // En productos nuevos el slug se genera solo desde el nombre hasta que el
+  // usuario lo edite manualmente (o lo bloquee en edición).
+  const [slugLocked, setSlugLocked] = useState(isEdit);
+  const [duplicating, setDuplicating] = useState(false);
   const [categoryId, setCategoryId] = useState(product?.category_id ?? "");
   const [material, setMaterial] = useState(product?.material ?? "");
   const [shortDesc, setShortDesc] = useState(product?.short_description ?? "");
@@ -118,14 +131,45 @@ export function ProductForm({
       product?.id,
     );
     if (res.ok) {
+      toast(isEdit ? "Cambios guardados" : "Producto creado");
       router.push("/admin/productos");
       router.refresh();
       return;
     }
     setSaving(false);
     setResult(res);
+    toast(res.error ?? "No se pudo guardar", "error");
     // sube al primer error visible
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function onNameChange(v: string) {
+    setName(v);
+    if (!slugLocked) setSlug(slugify(v));
+  }
+
+  function moveImage(from: number, to: number) {
+    setImages((prev) => {
+      if (to < 0 || to >= prev.length) return prev;
+      const next = [...prev];
+      const [it] = next.splice(from, 1);
+      next.splice(to, 0, it);
+      return next;
+    });
+  }
+
+  async function onDuplicate() {
+    if (!product) return;
+    setDuplicating(true);
+    const res = await duplicateProduct(product.id);
+    if (res.ok && res.id) {
+      toast("Producto duplicado. Editando la copia.");
+      router.push(`/admin/productos/${res.id}`);
+      router.refresh();
+    } else {
+      setDuplicating(false);
+      toast(res.error ?? "No se pudo duplicar", "error");
+    }
   }
 
   async function onDelete() {
@@ -193,7 +237,7 @@ export function ProductForm({
         <Card title="Información del producto">
           <div className="space-y-4">
             <Field label="Nombre" error={err("name")}>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Huaipe Mecánico Blanco" />
+              <Input value={name} onChange={(e) => onNameChange(e.target.value)} placeholder="Huaipe Mecánico Blanco" />
             </Field>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Categoría">
@@ -208,14 +252,56 @@ export function ProductForm({
                 <Input value={material} onChange={(e) => setMaterial(e.target.value)} placeholder="Huaipe / Paño / Trapo" />
               </Field>
             </div>
-            <Field label="Descripción corta" hint="Se muestra en la tarjeta del producto.">
+            <Field
+              label="Descripción corta"
+              hint="Se muestra en la tarjeta del producto."
+            >
               <Input value={shortDesc} onChange={(e) => setShortDesc(e.target.value)} placeholder="Resumen breve" />
+              <span
+                className={cn(
+                  "mt-1 block text-xs",
+                  shortDesc.length > SHORT_DESC_IDEAL ? "text-warning" : "text-ink-soft/70",
+                )}
+              >
+                {shortDesc.length}/{SHORT_DESC_IDEAL} caracteres
+                {shortDesc.length > SHORT_DESC_IDEAL && " · puede cortarse en la tarjeta"}
+              </span>
             </Field>
             <Field label="Descripción larga">
               <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} placeholder="Detalle, usos, características…" />
             </Field>
-            <Field label="Slug (URL)" error={err("slug")} hint="Se genera del nombre si lo dejas vacío.">
-              <Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="huaipe-mecanico-blanco" />
+            <Field label="Slug (URL)" error={err("slug")} hint="Se genera del nombre. Bloquéalo para editarlo a mano.">
+              <div className="flex items-center gap-2">
+                <Input
+                  value={slug}
+                  onChange={(e) => {
+                    setSlug(e.target.value);
+                    setSlugLocked(true);
+                  }}
+                  placeholder="huaipe-mecanico-blanco"
+                  className={cn(!slugLocked && "text-ink-soft")}
+                />
+                <button
+                  type="button"
+                  title={slugLocked ? "Editable manualmente — clic para volver a autogenerar" : "Se genera del nombre — clic para editar a mano"}
+                  onClick={() => {
+                    if (slugLocked) {
+                      setSlugLocked(false);
+                      setSlug(slugify(name));
+                    } else {
+                      setSlugLocked(true);
+                    }
+                  }}
+                  className={cn(
+                    "grid h-11 w-11 shrink-0 place-items-center rounded-xl border transition-colors",
+                    slugLocked
+                      ? "border-accent/40 bg-accent/10 text-accent-600"
+                      : "border-line text-ink-soft hover:text-ink",
+                  )}
+                >
+                  <Lock className="h-4 w-4" />
+                </button>
+              </div>
             </Field>
           </div>
         </Card>
@@ -240,7 +326,7 @@ export function ProductForm({
         )}
 
         {/* Imágenes */}
-        <Card title="Imágenes" description="La primera es la principal. Máx. 8MB.">
+        <Card title="Imágenes" description="La primera es la principal. Pasa el cursor para reordenar. Máx. 8MB.">
           <div className="flex flex-wrap gap-3">
             {images.map((url, i) => (
               <div key={url} className="group relative h-24 w-24 overflow-hidden rounded-xl border border-line">
@@ -259,6 +345,20 @@ export function ProductForm({
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
+                {/* Controles de orden */}
+                <div className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1 bg-black/45 py-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <TileBtn title="Mover a la izquierda" disabled={i === 0} onClick={() => moveImage(i, i - 1)}>
+                    <ChevronLeft className="h-3.5 w-3.5" />
+                  </TileBtn>
+                  {i !== 0 && (
+                    <TileBtn title="Hacer principal" onClick={() => moveImage(i, 0)}>
+                      <Star className="h-3.5 w-3.5" />
+                    </TileBtn>
+                  )}
+                  <TileBtn title="Mover a la derecha" disabled={i === images.length - 1} onClick={() => moveImage(i, i + 1)}>
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </TileBtn>
+                </div>
               </div>
             ))}
             <button
@@ -297,15 +397,26 @@ export function ProductForm({
           <Link href="/admin/productos">Cancelar</Link>
         </Button>
         {isEdit && (
-          <button
-            type="button"
-            onClick={onDelete}
-            disabled={deleting}
-            className="ml-auto inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-danger transition-colors hover:bg-danger/10 disabled:opacity-60"
-          >
-            {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-            Eliminar
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={onDuplicate}
+              disabled={duplicating}
+              className="ml-auto inline-flex items-center gap-2 rounded-xl border border-line px-4 py-2.5 text-sm font-medium text-ink-soft transition-colors hover:border-accent hover:text-accent disabled:opacity-60"
+            >
+              {duplicating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Star className="h-4 w-4" />}
+              Duplicar
+            </button>
+            <button
+              type="button"
+              onClick={onDelete}
+              disabled={deleting}
+              className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-danger transition-colors hover:bg-danger/10 disabled:opacity-60"
+            >
+              {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              Eliminar
+            </button>
+          </>
         )}
         </div>
         </div>{/* /columna de campos */}
@@ -456,6 +567,30 @@ function PreviewPanel({
         Así se verá en la tienda
       </p>
     </div>
+  );
+}
+
+function TileBtn({
+  children,
+  title,
+  onClick,
+  disabled,
+}: {
+  children: React.ReactNode;
+  title: string;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      onClick={onClick}
+      disabled={disabled}
+      className="grid h-6 w-6 place-items-center rounded-md text-white/90 transition-colors hover:bg-white/20 disabled:opacity-30 disabled:hover:bg-transparent"
+    >
+      {children}
+    </button>
   );
 }
 

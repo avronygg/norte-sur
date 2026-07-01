@@ -118,6 +118,91 @@ export async function saveProduct(
   return { ok: true, id };
 }
 
+/**
+ * Actualiza campos sueltos de un producto (edición inline en la lista):
+ * precio, stock, activo, destacado. Valida y revalida.
+ */
+export async function updateProductFields(
+  id: string,
+  fields: {
+    price?: number | null;
+    stock?: number;
+    is_active?: boolean;
+    is_featured?: boolean;
+  },
+): Promise<ActionResult> {
+  try {
+    await ensureAdmin();
+  } catch {
+    return { ok: false, error: "Sin permisos." };
+  }
+
+  const payload: Record<string, unknown> = {};
+  if ("price" in fields) {
+    const v = fields.price;
+    if (v != null && (Number.isNaN(v) || v < 0)) {
+      return { ok: false, error: "Precio inválido." };
+    }
+    payload.price = v;
+  }
+  if ("stock" in fields) {
+    const v = Number(fields.stock);
+    if (Number.isNaN(v) || v < 0) return { ok: false, error: "Stock inválido." };
+    payload.stock = v;
+  }
+  if ("is_active" in fields) payload.is_active = Boolean(fields.is_active);
+  if ("is_featured" in fields) payload.is_featured = Boolean(fields.is_featured);
+
+  if (Object.keys(payload).length === 0) return { ok: true, id };
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("products").update(payload as never).eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  revalidateAll();
+  return { ok: true, id };
+}
+
+/** Duplica un producto (crea una copia inactiva lista para editar). */
+export async function duplicateProduct(id: string): Promise<ActionResult> {
+  try {
+    await ensureAdmin();
+  } catch {
+    return { ok: false, error: "Sin permisos." };
+  }
+  const admin = createAdminClient();
+  const { data: orig, error: readErr } = await admin
+    .from("products")
+    .select("*")
+    .eq("id", id)
+    .single();
+  if (readErr || !orig) return { ok: false, error: readErr?.message ?? "No se encontró el producto." };
+
+  const rnd = randomUUID().slice(0, 6);
+  const {
+    id: _omitId,
+    created_at: _omitCreated,
+    updated_at: _omitUpdated,
+    ...rest
+  } = orig as Record<string, unknown>;
+
+  const payload = {
+    ...rest,
+    name: `${orig.name} (copia)`,
+    slug: `${orig.slug}-copia-${rnd}`,
+    is_active: false,
+    is_featured: false,
+  };
+
+  const { data: created, error } = await admin
+    .from("products")
+    .insert(payload as never)
+    .select("id")
+    .single();
+  if (error) return { ok: false, error: error.message };
+  revalidateAll();
+  return { ok: true, id: created?.id };
+}
+
 /** Elimina un producto. */
 export async function deleteProduct(id: string): Promise<ActionResult> {
   try {
