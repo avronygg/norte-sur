@@ -68,7 +68,7 @@ export function Hero({ products }: { products: ProductWithCategory[] }) {
           <motion.span
             variants={{ hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } }}
             transition={{ duration: 0.5, ease: easeOut }}
-            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-xs font-medium uppercase tracking-wider backdrop-blur"
+            className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[0.68rem] font-medium uppercase tracking-wider backdrop-blur sm:px-3.5 sm:text-xs"
           >
             <span className="h-1.5 w-1.5 rounded-full bg-accent" />
             Venta por mayor · Despacho a todo Chile
@@ -86,7 +86,7 @@ export function Hero({ products }: { products: ProductWithCategory[] }) {
           <motion.p
             variants={{ hidden: { opacity: 0, y: 18 }, show: { opacity: 1, y: 0 } }}
             transition={{ duration: 0.6, ease: easeOut }}
-            className="mt-3.5 max-w-md text-pretty text-base leading-snug text-white/80 sm:mt-5 sm:text-lg sm:leading-relaxed"
+            className="mt-3.5 max-w-md text-pretty text-sm leading-snug text-white/80 sm:mt-5 sm:text-lg sm:leading-relaxed"
           >
             Abastecemos a empresas e industrias en todo Chile. Compra directa o pide
             tu cotización por volumen.
