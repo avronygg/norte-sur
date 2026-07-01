@@ -57,7 +57,7 @@ export function Hero({ products }: { products: ProductWithCategory[] }) {
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      <div className="relative mx-auto grid w-full max-w-7xl items-center gap-12 px-6 py-20 lg:grid-cols-12">
+      <div className="relative mx-auto grid w-full max-w-7xl items-center gap-8 px-6 py-14 sm:py-20 lg:grid-cols-12 lg:gap-12">
         {/* texto */}
         <motion.div
           className="lg:col-span-7"
@@ -77,7 +77,7 @@ export function Hero({ products }: { products: ProductWithCategory[] }) {
           <motion.h1
             variants={{ hidden: { opacity: 0, y: 22 }, show: { opacity: 1, y: 0 } }}
             transition={{ duration: 0.6, ease: easeOut }}
-            className="mt-6 text-balance font-display text-4xl font-bold leading-[1.06] tracking-tight sm:text-5xl lg:text-6xl"
+            className="mt-5 text-balance font-display text-3xl font-bold leading-[1.1] tracking-tight sm:mt-6 sm:text-5xl sm:leading-[1.06] lg:text-6xl"
           >
             Huaipes y paños{" "}
             <span className="text-accent">al por mayor</span> para tu empresa.
@@ -86,7 +86,7 @@ export function Hero({ products }: { products: ProductWithCategory[] }) {
           <motion.p
             variants={{ hidden: { opacity: 0, y: 18 }, show: { opacity: 1, y: 0 } }}
             transition={{ duration: 0.6, ease: easeOut }}
-            className="mt-5 max-w-md text-pretty text-lg leading-relaxed text-white/80"
+            className="mt-3.5 max-w-md text-pretty text-base leading-snug text-white/80 sm:mt-5 sm:text-lg sm:leading-relaxed"
           >
             Abastecemos a empresas e industrias en todo Chile. Compra directa o pide
             tu cotización por volumen.
@@ -95,7 +95,7 @@ export function Hero({ products }: { products: ProductWithCategory[] }) {
           <motion.div
             variants={{ hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } }}
             transition={{ duration: 0.6, ease: easeOut }}
-            className="mt-8 flex flex-wrap items-center gap-3"
+            className="mt-6 flex flex-wrap items-center gap-3 sm:mt-8"
           >
             <Button asChild size="lg" variant="accent">
               <Link href="/productos">
@@ -114,7 +114,7 @@ export function Hero({ products }: { products: ProductWithCategory[] }) {
 
           {/* features como pills de vidrio (reemplaza la franja inferior) */}
           <motion.ul
-            className="mt-9 flex flex-wrap gap-2.5"
+            className="mt-6 flex flex-wrap gap-2.5 sm:mt-9"
             initial="hidden"
             animate="show"
             variants={{ hidden: {}, show: { transition: { staggerChildren: 0.07, delayChildren: 0.5 } } }}
