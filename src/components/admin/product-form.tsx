@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea, Select, Field, Card, Toggle } from "@/components/admin/ui";
-import { cn } from "@/lib/utils";
+import { cn, formatCLP } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import type { Category, Product } from "@/types/database";
 import {
@@ -145,7 +145,7 @@ export function ProductForm({
   const err = (field: string) => result?.fieldErrors?.[field];
 
   return (
-    <form onSubmit={onSubmit} className="mx-auto max-w-3xl pb-4">
+    <form onSubmit={onSubmit} className="mx-auto max-w-5xl pb-4">
       <Link
         href="/admin/productos"
         className="inline-flex items-center gap-2 text-sm font-medium text-ink-soft transition-colors hover:text-ink"
@@ -166,7 +166,9 @@ export function ProductForm({
         </p>
       )}
 
-      <div className="mt-5 space-y-5">
+      <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        {/* Columna de campos */}
+        <div className="order-2 space-y-5 lg:order-1">
         {/* Modalidad */}
         <Card title="Modalidad de venta">
           <div className="grid gap-3 sm:grid-cols-2">
@@ -281,10 +283,9 @@ export function ProductForm({
             </Field>
           </div>
         </Card>
-      </div>
 
-      {/* Acciones */}
-      <div className="mt-6 flex flex-wrap items-center gap-3">
+        {/* Acciones */}
+        <div className="mt-6 flex flex-wrap items-center gap-3">
         <Button type="submit" size="lg" variant="primary" disabled={saving || uploading}>
           {saving ? (
             <><Loader2 className="h-5 w-5 animate-spin" /> Guardando…</>
@@ -306,8 +307,155 @@ export function ProductForm({
             Eliminar
           </button>
         )}
+        </div>
+        </div>{/* /columna de campos */}
+
+        {/* Vista previa en vivo */}
+        <div className="order-1 lg:order-2">
+          <div className="lg:sticky lg:top-6">
+            <PreviewPanel
+              name={name}
+              shortDesc={shortDesc}
+              image={images[0]}
+              saleMode={saleMode}
+              price={price}
+              unit={unit}
+              stock={stock}
+              categoryName={categories.find((c) => c.id === categoryId)?.name}
+              material={material}
+              isFeatured={isFeatured}
+              isActive={isActive}
+            />
+          </div>
+        </div>
       </div>
     </form>
+  );
+}
+
+function PreviewPanel({
+  name,
+  shortDesc,
+  image,
+  saleMode,
+  price,
+  unit,
+  stock,
+  categoryName,
+  material,
+  isFeatured,
+  isActive,
+}: {
+  name: string;
+  shortDesc: string;
+  image?: string;
+  saleMode: "direct" | "quote";
+  price: string;
+  unit: string;
+  stock: string;
+  categoryName?: string;
+  material: string;
+  isFeatured: boolean;
+  isActive: boolean;
+}) {
+  const isDirect = saleMode === "direct";
+  const priceNum = Number(price);
+  const stockNum = Number(stock);
+  const topLabel = categoryName || material || "Norte Sur";
+
+  return (
+    <div>
+      <p className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-ink-soft">
+        Vista previa
+        {!isActive && (
+          <span className="rounded-full bg-ink/10 px-2 py-0.5 text-[0.68rem] font-bold normal-case tracking-normal text-ink-soft">
+            Inactivo
+          </span>
+        )}
+      </p>
+
+      {/* Réplica de la tarjeta de la tienda */}
+      <div className={cn("flex flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-sm", !isActive && "opacity-60")}>
+        <div className="relative aspect-square overflow-hidden bg-paper-2">
+          {image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={image} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <div className="texture-weave grain flex h-full w-full items-center justify-center bg-gradient-to-br from-paper to-paper-2">
+              <span className="font-display text-sm font-semibold uppercase tracking-widest text-ink-soft/60">
+                {material || "Sin foto"}
+              </span>
+            </div>
+          )}
+          <span className="absolute left-3 top-3 rounded-full bg-surface/90 px-2.5 py-1 text-[0.78rem] font-bold uppercase tracking-wider text-ink-soft backdrop-blur">
+            {topLabel}
+          </span>
+          <span
+            className={cn(
+              "absolute right-3 top-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[0.78rem] font-bold backdrop-blur",
+              isDirect ? "bg-accent text-accent-foreground" : "bg-primary/90 text-primary-foreground",
+            )}
+          >
+            {isDirect ? (
+              <><ShoppingCart className="h-3 w-3" /> Compra directa</>
+            ) : (
+              <><FileText className="h-3 w-3" /> Cotización</>
+            )}
+          </span>
+          {isFeatured && (
+            <span className="absolute bottom-3 left-3 rounded-full bg-primary/90 px-2.5 py-1 text-[0.72rem] font-bold text-primary-foreground backdrop-blur">
+              Destacado
+            </span>
+          )}
+        </div>
+
+        <div className="flex flex-1 flex-col p-4">
+          <h3 className="font-display text-base font-bold leading-snug text-ink">
+            {name || "Nombre del producto"}
+          </h3>
+          {shortDesc ? (
+            <p className="mt-1.5 line-clamp-2 text-sm text-ink-soft">{shortDesc}</p>
+          ) : (
+            <p className="mt-1.5 text-sm italic text-ink-soft/50">Descripción corta…</p>
+          )}
+
+          <div className="mt-auto flex items-end justify-between pt-4">
+            <div>
+              {isDirect ? (
+                <>
+                  <div>
+                    <span className="font-display text-lg font-bold text-ink">
+                      {price !== "" && !Number.isNaN(priceNum) ? formatCLP(priceNum) : "$—"}
+                    </span>
+                    <span className="text-xs text-ink-soft"> / {unit}</span>
+                  </div>
+                  {stockNum > 0 && (
+                    <span className="mt-0.5 inline-flex items-center gap-1 text-xs font-medium text-success">
+                      <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                      {stockNum.toLocaleString("es-CL")} disp.
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span className="text-sm font-semibold text-primary">Precio por cotización</span>
+              )}
+            </div>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold",
+                isDirect ? "bg-accent text-accent-foreground" : "border border-primary/30 text-primary",
+              )}
+            >
+              {isDirect ? "Agregar" : "Cotizar"}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <p className="mt-2 text-center text-xs text-ink-soft/70">
+        Así se verá en la tienda
+      </p>
+    </div>
   );
 }
 
