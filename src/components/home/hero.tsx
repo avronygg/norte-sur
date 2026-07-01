@@ -133,9 +133,9 @@ export function Hero({ products }: { products: ProductWithCategory[] }) {
           </motion.ul>
         </motion.div>
 
-        {/* tarjeta de producto real, rotando */}
+        {/* tarjeta de producto real, rotando — oculta en móvil para acortar el hero */}
         {current && (
-          <div className="relative lg:col-span-5">
+          <div className="relative hidden lg:col-span-5 lg:block">
             <div className="relative mx-auto w-full max-w-[300px]">
               {/* halo de marca detrás */}
               <div className="absolute -inset-6 -z-10 rounded-[2rem] bg-accent/20 blur-2xl" aria-hidden />
